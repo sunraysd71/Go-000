@@ -1,1 +1,21 @@
-学习笔记
+学习笔记都是一些疑问，比较乱自己私藏，基础不好要慢慢啃。
+
+作业代码运行方式：
+需要用eclipse才行，项目名为week2，我是在VS Code不知道如何在同一个src目录引用别的包才用eclipse做的。
+main函数在myapp.go
+
+架构（没做过开发，对软件架构不熟悉）：
+mysql为模拟mysql（没用真实的mysql，因为作业查看测试麻烦，而写sql也太麻烦，简单用键值对来代替。）
+service为业务层（因为多写一层太麻烦，所以把DAO和Service层合并为一层。）
+myapp为API层（这里是包含BFF网关横切面，负责统一记录日志等。）
+
+说明：
+在DAO层需要把error Wrap起来，因为mysql的原生error返回不带入参和sql语句这些信息。
+在Service层需要把DAO层传过来的error Wrap起来，因为这一层可能不同API执行同一个sql，没有Wrap而直接穿透的话就记录不了到底是哪个方法。
+以及对于原子化事务需要把DAO层传来的错误再统一整合一下然后再传给上层，作为以事务为单位而不是sql语句为单位。
+（但有一点不懂，是只Wrap一次后面要附加信息要用WithMessage还是后面附加信息也可以Wrap而堆栈信息不会重复，
+以后尝试对比。）
+最终是在BFF网关统一把日志进行记录，处理，错误不再往上传，同时选择错误信息以用户友好的方式返回给客户端。
+因为error type比errorString携带更多的信息，实际环境应该要用error type（作业只用了errorString）。
+就是实现error接口生成一种新的error类型，结构体包含想要的信息，也可以提供API方便上层对error内不同字段进行查询。
+最好是不同DAO层服务到service层的error有统一的格式，不同service层服务到API层的error有统一的格式。
